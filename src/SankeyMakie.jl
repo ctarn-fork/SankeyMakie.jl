@@ -126,7 +126,7 @@ function Makie.plot!(s::Sankey)
                     append!(sankey_y, y_coords)
                     sankey_x = range(x[i]+wbox, x[k]-wbox, length = length(sankey_y))
 
-                    pol = linkpoly(scene, xvals, yvals .- h_edge, 2h_edge)
+                    pol = linkpoly(s, xvals, yvals .- h_edge, 2h_edge)
 
                     poly!(s, pol, color = get_link_color(s.linkcolor[], i, j, linkindexdict[(i, j)], s.nodecolor[]), space = :pixel)
                     # band!(s, sankey_x, sankey_y.-2h_edge, sankey_y, color = (:black, 0.1))
@@ -391,10 +391,11 @@ function make_compact(x, y, w)
     return y
 end
 
-function linkpoly(scene, xs, ys, lwidth)
+function linkpoly(plot, xs, ys, lwidth)
     n = 30
 
-    lift(scene.camera.projectionview, scene.px_area) do _, _
+    scene = Makie.parent_scene(plot)
+    lift(scene.camera.projectionview, scene.viewport) do _, _
 
         nparts = length(xs)-1
         # points = Vector{Point2f}(undef, 2 * n * nparts)
@@ -407,14 +408,14 @@ function linkpoly(scene, xs, ys, lwidth)
                 @view(ys[2:end]),
             ))
 
-            corners = Makie.scene_to_screen(
+            corners = Makie.plot_to_screen(
+                plot,
                 Point2f[
                     (x0, y0 - lwidth/2),
                     (x1, y1 - lwidth/2),
                     (x1, y1 + lwidth/2),
                     (x0, y0 + lwidth/2),
-                ],
-                scene
+                ]
             )
 
             start = 0.5 * (corners[1] + corners[4])
